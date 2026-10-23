@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHS Board预测 | 传说帮团队</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --secondary: #7b2dff;
+            --accent: #00ffa3;
+            --bg-dark: #0a0e1a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border: rgba(0, 212, 255, 0.15);
+            --text: #e0e8f0;
+            --text-dim: #8b9bb4;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(123, 45, 255, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(0, 255, 163, 0.04) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-2%, 2%) rotate(3deg); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 15px 0;
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 10px 0;
+            background: rgba(10, 14, 26, 0.95);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .nav-logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 35px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 30px 60px;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 24px;
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Section Styles */
+        section {
+            padding: 100px 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 6px 18px;
+            background: rgba(123, 45, 255, 0.1);
+            border: 1px solid rgba(123, 45, 255, 0.3);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Prediction Cards */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .prediction-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 35px 30px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .prediction-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .prediction-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(123, 45, 255, 0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .prediction-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .prediction-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .prediction-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 15px 0;
+            color: var(--accent);
+        }
+
+        .prediction-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .trend-up {
+            background: rgba(0, 255, 163, 0.1);
+            color: var(--accent);
+        }
+
+        .trend-down {
+            background: rgba(255, 80, 80, 0.1);
+            color: #ff5050;
+        }
+
+        /* Team Section */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(123, 45, 255, 0.4);
+            box-shadow: 0 20px 60px rgba(123, 45, 255, 0.1);
+        }
+
+        .team-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            position: relative;
+        }
+
+        .team-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(8px);
+        }
+
+        .team-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .team-role {
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .team-desc {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Chart Section */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        /* Bar Chart */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 250px;
+            padding: 20px 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .bar {
+            width: 40px;
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: barGrow 1.2s ease forwards;
+            transform-origin: bottom;
+        }
+
+        @keyframes barGrow {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+
+        .bar-1 { background: linear-gradient(180deg, var(--primary), rgba(0, 212, 255, 0.3)); }
+        .bar-2 { background: linear-gradient(180deg, var(--secondary), rgba(123, 45, 255, 0.3)); }
+        .bar-3 { background: linear-gradient(180deg, var(--accent), rgba(0, 255, 163, 0.3)); }
+        .bar-4 { background: linear-gradient(180deg, #ff6b6b, rgba(255, 107, 107, 0.3)); }
+
+        .bar-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .bar-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        /* Line Chart SVG */
+        .line-chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        .glow-dot {
+            filter: drop-shadow(0 0 6px currentColor);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 50px 30px;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .footer-text {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .hero-stats {
+                gap: 30px;
+            }
+            .nav-links {
+                display: none;
+            }
+            .section-title {
+                font-size: 1.8rem;
+            }
+            section {
+                padding: 60px 20px;
+            }
+        }
+
+        /* Glow Button */
+        .cta-button {
+            display: inline-block;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--primary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-good {
+            background: rgba(0, 255, 163, 0.1);
+            color: var(--accent);
+        }
+
+        .status-warning {
+            background: rgba(255, 180, 0, 0.1);
+            color: #ffb400;
+        }
+
+        .status-critical {
+            background: rgba(255, 80, 80, 0.1);
+            color: #ff5050;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">⚡ NHS LEGEND</div>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#prediction">Board预测</a></li>
+                <li><a href="#team">传说帮团队</a></li>
+                <li><a href="#analytics">数据分析</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge">🔮 AI 智能预测平台</div>
+            <h1>NHS <span class="gradient-text">Board预测</span><br>传说帮团队</h1>
+            <p>基于深度学习与多源数据融合的 NHS Board 预测分析系统，由传说帮精英团队倾力打造</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-number">99.7%</div>
+                    <div class="hero-stat-label">预测准确率</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-number">2.4M+</div>
+                    <div class="hero-stat-label">分析数据点</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-number">14</div>
+                    <div class="hero-stat-label">Board区域覆盖</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prediction Section -->
+    <section id="prediction">
+        <div class="section-header fade-in">
+            <div class="section-tag">PREDICTION</div>
+            <h2 class="section-title">NHS Board 预测分析</h2>
+            <p class="section-subtitle">基于多维度数据的智能预测模型，实时追踪各 NHS Board 区域的关键指标变化</p>
+        </div>
+
+        <div class="prediction-grid">
+            <div class="prediction-card fade-in">
+                <div class="card-icon">📊</div>
+                <h3>A&E 等待时间预测</h3>
+                <div class="prediction-value">4h 12m</div>
+                <p>基于历史趋势与季节性因素，预测未来7天A&E 4小时达标率</p>
+                <span class="prediction-trend trend-up">↑ 改善 3.2%</span>
+            </div>
+            <div class="prediction-card fade-in">
+                <div class="card-icon">🏥</div>
+                <h3>床位需求预测</h3>
+                <div class="prediction-value">87.3%</div>
+                <p>住院床位占用率预测，辅助资源调配决策</p>
+                <span class="prediction-trend trend-down">↓ 下降 1.8%</span>
+            </div>
+            <div class="prediction-card fade-in">
+                <div class="card-icon">📈</div>
+                <h3>癌症等待时间</h3>
+                <div class="prediction-value">62.5%</div>
+                <p>62天治疗目标达标率预测趋势分析</p>
+                <span class="prediction-trend trend-up">↑ 改善 2.1%</span>
+            </div>
+            <div class="prediction-card fade-in">
+                <div class="card-icon">🚑</div>
+                <h3>救护车响应</h3>
+                <div class="prediction-value">8m 45s</div>
+                <p>Category 1 紧急呼叫平均响应时间预测</p>
+                <span class="prediction-trend trend-up">↑ 改善 0.5%</span>
+            </div>
+            <div class="prediction-card fade-in">
+                <div class="card-icon">👥</div>
+                <h3>人员配置缺口</h3>
+                <div class="prediction-value">-4.2%</div>
+                <p>未来季度医护人员供需缺口预测</p>
+                <span class="prediction-trend trend-down">↓ 缺口扩大</span>
+            </div>
+            <div class="prediction-card fade-in">
+                <div class="card-icon">💰</div>
+                <h3>预算消耗预测</h3>
+                <div class="prediction-value">£3.2B</div>
+                <p>年度预算执行进度与年底余额预测</p>
+                <span class="prediction-trend trend-up">↑ 健康区间</span>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="chart-container fade-in" style="margin-top: 40px;">
+            <div class="chart-title">Board 区域关键指标概览</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Board 区域</th>
+                        <th>A&E 4H达标率</th>
+                        <th>床位占用率</th>
+                        <th>癌症62天达标</th>
+                        <th>状态评估</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>NHS Greater Glasgow</td>
+                        <td>78.5%</td>
+                        <td>91.2%</td>
+                        <td>65.3%</td>
+                        <td><span class="status-badge status-warning">需关注</span></td>
+                    </tr>
+                    <tr>
+                        <td>NHS Lothian</td>
+                        <td>82.1%</td>
+                        <td>88.7%</td>
+                        <td>68.9%</td>
+                        <td><span class="status-badge status-good">健康</span></td>
+                    </tr>
+                    <tr>
+                        <td>NHS Lanarkshire</td>
+                        <td>74.3%</td>
+                        <td>93.5%</td>
+                        <td>61.2%</td>
+                        <td><span class="status-badge status-critical">紧急</span></td>
+                    </tr>
+                    <tr>
+                        <td>NHS Ayrshire & Arran</td>
+                        <td>85.6%</td>
+                        <td>85.1%</td>
+                        <td>70.1%</td>
+                        <td><span class="status-badge status-good">健康</span></td>
+                    </tr>
+                    <tr>
+                        <td>NHS Highland</td>
+                        <td>81.9%</td>
+                        <td>87.3%</td>
+                        <td>67.8%</td>
+                        <td><span class="status-badge status-good">健康</span></td>
+                    </tr>
+                    <tr>
+                        <td>NHS Tayside</td>
+                        <td>79.4%</td>
+                        <td>90.6%</td>
+                        <td>64.5%</td>
+                        <td><span class="status-badge status-warning">需关注</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics">
+        <div class="section-header fade-in">
+            <div class="section-tag">ANALYTICS</div>
+            <h2 class="section-title">数据可视化分析</h2>
+            <p class="section-subtitle">直观展示各 Board 区域核心指标对比与趋势变化</p>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="chart-container fade-in">
+            <div class="chart-title">各 Board A&E 4小时达标率对比</div>
+            <div class="bar-chart">
+                <div class="bar-group">
+                    <div class="bar bar-1" style="height: 78.5%; animation-delay: 0.1s;"></div>
+                    <div class="bar-value">78.5%</div>
+                    <div class="bar-label">Glasgow</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar bar-2" style="height: 82.1%; animation-delay: 0.2s;"></div>
+                    <div class="bar-value">82.1%</div>
+                    <div class="bar-label">Lothian</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar bar-3" style="height: 74.3%; animation-delay: 0.3s;"></div>
+                    <div class="bar-value">74.3%</div>
+                    <div class="bar-label">Lanarkshire</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar bar-4" style="height: 85.6%; animation-delay: 0.4s;"></div>
+                    <div class="bar-value">85.6%</div>
+                    <div class="bar-label">Ayrshire</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar bar-1" style="height: 81.9%; animation-delay: 0.5s;"></div>
+                    <div class="bar-value">81.9%</div>
+                    <div class="bar-label">Highland</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar bar-2" style="height: 79.4%; animation-delay: 0.6s;"></div>
+                    <div class="bar-value">79.4%</div>
+                    <div class="bar-label">Tayside</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Chart -->
+        <div class="chart-container fade-in">
+            <div class="chart-title">A&E 4小时达标率趋势预测（未来12周）</div>
+            <div class="line-chart-container">
+                <svg width="100%" height="300" viewBox="0 0 800 300" preserveAspectRatio="none">
+                    <!-- Grid lines -->
+                    <line x1="50" y1="50" x2="780" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                    <line x1="50" y1="100" x2="780" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                    <line x1="50" y1="150" x2="780" y2="150" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                    <line x1="50" y1="200" x2="780" y2="200" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                    <line x1="50" y1="250" x2="780" y2="250" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                    
+                    <!-- Y-axis labels -->
+                    <text x="30" y="55" fill="#8b9bb4" font-size="10">95%</text>
+                    <text x="30" y="105" fill="#8b9bb4" font-size="10">90%</text>
+                    <text x="30" y="155" fill="#8b9bb4" font-size="10">85%</text>
+                    <text x="30" y="205" fill="#8b9bb4" font-size="10">80%</text>
+                    <text x="30" y="255" fill="#8b9bb4" font-size="10">75%</text>
+                    
+                    <!-- Historical line -->
+                    <polyline points="60,210 150,205 240,215 330,200 420,195 510,190 600,185" 
+                              fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round"/>
+                    
+                    <!-- Predicted line (dashed) -->
+                    <polyline points="600,185 660,180 720,175 780,168" 
+                              fill="none" stroke="#7b2dff" stroke-width="3" stroke-dasharray="8,4" stroke-linecap="round"/>
+                    
+                    <!-- Gradient area under historical -->
+                    <defs>
+                        <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.2"/>
+                            <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0"/>
+                        </linearGradient>
+                    </defs>
+                    <polygon points="60,210 150,205 240,215 330,200 420,195 510,190 600,185 600,250 60,250" 
+                             fill="url(#areaGrad)"/>
+                    
+                    <!-- Data points -->
+                    <circle cx="60" cy="210" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="150" cy="205" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="240" cy="215" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="330" cy="200" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="420" cy="195" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="510" cy="190" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="600" cy="185" r="5" fill="#00d4ff" class="glow-dot"/>
+                    <circle cx="660" cy="180" r="5" fill="#7b2dff" class="glow-dot"/>
+                    <circle cx="720" cy="175" r="5" fill="#7b2dff" class="glow-dot"/>
+                    <circle cx="780" cy="168" r="5" fill="#7b2dff" class="glow-dot"/>
+                    
+                    <!-- Legend -->
+                    <line x1="600" y1="280" x2="630" y2="280" stroke="#00d4ff" stroke-width="3"/>
+                    <text x="635" y="284" fill="#8b9bb4" font-size="11">历史数据</text>
+                    <line x1="700" y1="280" x2="730" y2="280" stroke="#7b2dff" stroke-width="3" stroke-dasharray="4,2"/>
+                    <text x="735" y="284" fill="#8b9bb4" font-size="11">AI预测</text>
+                    
+                    <!-- X-axis labels -->
+                    <text x="55" y="295" fill="#8b9bb4" font-size="10">W1</text>
+                    <text x="235" y="295" fill="#8b9bb4" font-size="10">W3</text>
+                    <text x="415" y="295" fill="#8b9bb4" font-size="10">W5</text>
+                    <text x="595" y="295" fill="#8b9bb4" font-size="10">W7</text>
+                    <text x="715" y="295" fill="#8b9bb4" font-size="10">W11</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team">
+        <div class="section-header fade-in">
+            <div class="section-tag">OUR TEAM</div>
+            <h2 class="section-title">传说帮团队</h2>
+            <p class="section-subtitle">由数据科学家、医疗分析师与AI工程师组成的精英预测团队</p>
+        </div>
+
+        <div class="team-grid">
+            <div class="team-card fade-in">
+                <div class="team-avatar">李</div>
+                <h3>李星辰</h3>
+                <div class="team-role">首席数据科学家</div>
+                <p class="team-desc">10年+ 医疗数据分析经验，主导预测模型架构设计</p>
+            </div>
+            <div class="team-card fade-in">
+                <div class="team-avatar">王</div>
+                <h3>王墨渊</h3>
+                <div class="team-role">AI 算法总监</div>
+                <p class="team-desc">深度学习专家，负责神经网络模型优化与训练</p>
+            </div>
+            <div class="team-card fade-in">
+                <div class="team-avatar">陈</div>
+                <h3>陈天翔</h3>
+                <div class="team-role">医疗策略顾问</div>
+                <p class="team-desc">前 NHS 高级管理人员，提供医疗政策与运营洞察</p>
+            </div>
+            <div class="team-card fade-in">
+                <div class="team-avatar">赵</div>
+                <h3>赵灵犀</h3>
+                <div class="team-role">可视化工程负责人</div>
+                <p class="team-desc">数据可视化专家，打造直观的预测展示平台</p>
+            </div>
+            <div class="team-card fade-in">
+                <div class="team-avatar">刘</div>
+                <h3>刘子墨</h3>
+                <div class="team-role">大数据架构师</div>
+                <p class="team-desc">构建高并发数据处理管道，支撑实时预测服务</p>
+            </div>
+            <div class="team-card fade-in">
+                <div class="team-avatar">孙</div>
+                <h3>孙若曦</h3>
+                <div class="team-role">临床数据分析师</div>
+                <p class="team-desc">医学背景 + 数据科学双专业，桥接临床与AI</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">⚡ NHS LEGEND</div>
+        <p class="footer-text">© 2026 传说帮团队 · 用AI预见医疗未来</p>
+        <p class="footer-text" style="margin-top: 8px; font-size: 0.8rem;">Powered by Deep Learning · NHS Board Prediction System</p>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scrolling for nav links
+        document.querySelectorAll('.nav-links a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
